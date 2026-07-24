@@ -35,9 +35,24 @@ from pydantic import BaseModel, Field
 import anthropic
 
 from density import compute_density_pcf, resolve_class
-from build_embeddings import search, load_dataset
+from build_embeddings import search, load_dataset, MODEL_NAME
+from sentence_transformers import SentenceTransformer
+import sheets_logger
 
 app = FastAPI(title="NMFC Code Suggestion API", version="0.1.0")
+
+# The embedding model is loaded once here, at process startup, and reused for
+# every request. Loading it fresh per-request (the previous behavior when no
+# model was passed to search()) was the single biggest source of latency —
+# several seconds of model initialization on every call for no reason, since
+# the model itself never changes between requests.
+_embedding_model: Optional[SentenceTransformer] = None
+
+
+@app.on_event("startup")
+def load_embedding_model():
+    global _embedding_model
+    _embedding_model = SentenceTransformer(MODEL_NAME)
 
 # Demo-only: allows the standalone HTML frontend (opened as a local file, a different
 # "origin" than the API) to call this endpoint from the browser. Lock this down to
@@ -49,7 +64,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-ANTHROPIC_MODEL = "claude-sonnet-4-6"
+ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-5")
 API_KEY = os.environ.get("NMFC_API_KEY")  # demo-level auth only; swap for real key management in production
 
 SYSTEM_PROMPT = """You are an NMFC freight classification assistant. You will be given:
@@ -73,6 +88,17 @@ Your job:
   but note that hazmat items require manual compliance review regardless of classification confidence
 - If the top candidate's confidence is below 0.5, set needs_clarification to true and ask exactly
   ONE targeted question that would most improve confidence — never ask multiple questions
+
+CRITICAL — do not use outside knowledge for classification specifics:
+- This system operates on a synthetic demo dataset, not the real licensed NMFC tariff. Only reference
+  the specific item_ids, descriptions, and classes given in the candidates list below.
+- NEVER invent, cite, or reference real-world NMFC item/sub-item numbers, tariff codes, or DOT/hazmat
+  identifiers (e.g. UN numbers) that are not present in the provided candidate data, even if you
+  believe you know the correct real-world classification. Stating an unverified real regulatory
+  number as fact is worse than saying nothing.
+- If none of the provided candidates are a reasonably close match, say so plainly in the rationale
+  and/or clarifying_question — e.g. "no close match in the current reference set for this item type"
+  — rather than filling the gap with a fabricated but plausible-sounding classification detail.
 
 Respond ONLY with valid JSON matching this schema, no markdown, no preamble, no code fences:
 {
@@ -106,6 +132,19 @@ class SuggestResponse(BaseModel):
     clarifying_question: Optional[str]
 
 
+class LogSelectionRequest(BaseModel):
+    description: str
+    computed_density_pcf: float
+    suggestions: list  # the full ranked list as originally returned by /v1/nmfc/suggest
+    selected_item_id: str
+
+
+class LogSelectionResponse(BaseModel):
+    logged: bool
+    was_override: Optional[bool] = None
+    error: Optional[str] = None
+
+
 def verify_api_key(x_api_key: Optional[str]):
     if API_KEY and x_api_key != API_KEY:
         raise HTTPException(status_code=401, detail="Invalid or missing API key")
@@ -127,7 +166,7 @@ def build_candidate_payload(request: SuggestRequest, top_k: int = 5) -> tuple[fl
     if request.clarification_answer:
         retrieval_query = f"{request.description}. {request.clarification_answer}"
 
-    retrieved = search(retrieval_query, top_k=top_k)
+    retrieved = search(retrieval_query, top_k=top_k, model=_embedding_model)
     dataset_by_id = {c["item_id"]: c for c in load_dataset()}
 
     candidates = []
@@ -170,12 +209,26 @@ def call_claude_for_ranking(request: SuggestRequest, density_pcf: float, candida
 
     response = client.messages.create(
         model=ANTHROPIC_MODEL,
-        max_tokens=1000,
+        max_tokens=2000,
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": json.dumps(user_payload)}],
     )
 
-    raw_text = response.content[0].text.strip()
+    # Don't assume content[0] is the text block — models can return a thinking
+    # block (or other block types) before the actual text response. Filter by
+    # type instead of relying on position.
+    text_blocks = [block.text for block in response.content if block.type == "text"]
+    if not text_blocks:
+        raise ValueError("Claude response contained no text block to parse")
+    raw_text = "".join(text_blocks).strip()
+
+    if response.stop_reason == "max_tokens":
+        print(
+            f"--- WARNING: Claude response was truncated at the max_tokens limit "
+            f"({response.usage.output_tokens} tokens used). Raw response: ---"
+        )
+        print(raw_text)
+        print("--- end of truncated response ---")
     # Defensive: strip markdown fences if the model adds them despite instructions
     if raw_text.startswith("```"):
         raw_text = raw_text.strip("`")
@@ -183,7 +236,16 @@ def call_claude_for_ranking(request: SuggestRequest, density_pcf: float, candida
             raw_text = raw_text[4:]
         raw_text = raw_text.strip()
 
-    return json.loads(raw_text)
+    try:
+        return json.loads(raw_text)
+    except json.JSONDecodeError:
+        # Print the raw response to the server console so this is diagnosable —
+        # a generic error to the caller is fine, but silently losing the actual
+        # model output makes debugging truncation/formatting issues much harder.
+        print("--- Claude response failed to parse as JSON ---")
+        print(raw_text)
+        print("--- end of raw response ---")
+        raise
 
 
 @app.post("/v1/nmfc/suggest", response_model=SuggestResponse)
@@ -206,6 +268,34 @@ def suggest_nmfc_code(request: SuggestRequest, x_api_key: Optional[str] = Header
         needs_clarification=claude_result.get("needs_clarification", False),
         clarifying_question=claude_result.get("clarifying_question"),
     )
+
+
+@app.post("/v1/nmfc/log-selection", response_model=LogSelectionResponse)
+def log_selection(request: LogSelectionRequest, x_api_key: Optional[str] = Header(None)):
+    verify_api_key(x_api_key)
+
+    top_suggestion = request.suggestions[0] if request.suggestions else None
+    selected_suggestion = next(
+        (s for s in request.suggestions if s.get("nmfc_item_id") == request.selected_item_id),
+        None,
+    )
+
+    row = sheets_logger.build_log_row(
+        description=request.description,
+        computed_density_pcf=request.computed_density_pcf,
+        top_suggestion=top_suggestion,
+        selected_item_id=request.selected_item_id,
+        selected_suggestion=selected_suggestion,
+    )
+
+    # Logging is a fire-and-forget analytics signal — a Sheets outage or bad
+    # credentials should never break the user-facing classification flow, so
+    # failures here are reported back but not raised as an HTTP error.
+    try:
+        sheets_logger.log_selection(row)
+        return LogSelectionResponse(logged=True, was_override=row["was_override"])
+    except Exception as e:
+        return LogSelectionResponse(logged=False, error=str(e))
 
 
 @app.get("/health")

@@ -395,6 +395,41 @@
     border-radius: 3px;
   }
 
+  .select-row {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--manila-dark);
+  }
+
+  button.select-btn {
+    background: transparent;
+    color: var(--teal-dark);
+    border: 1.5px solid var(--teal-dark);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  button.select-btn:hover { background: var(--teal-dark); color: var(--chalk); }
+  button.select-btn:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+  button.select-btn:disabled { opacity: 0.5; cursor: default; }
+
+  .selected-mark {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    letter-spacing: 0.03em;
+    color: var(--teal-dark);
+    font-weight: 600;
+  }
+
+  .tag.is-selected {
+    outline: 3px solid var(--teal-dark);
+    outline-offset: 2px;
+  }
+
   .error-box {
     background: #3a1f14;
     color: #f0c9a8;
@@ -509,7 +544,7 @@
       ? `<div class="hazmat-strip">⚠ HAZMAT — requires manual compliance review regardless of confidence</div>`
       : '';
     return `
-      <div class="tag">
+      <div class="tag" data-item-id="${s.nmfc_item_id}">
         <div class="tag-top-row">
           <div>
             <div class="tag-id">${s.nmfc_item_id}</div>
@@ -521,6 +556,9 @@
         <div class="gauge"><div class="gauge-fill ${confidenceClass(s.confidence)}" style="width:${pct}%"></div></div>
         <div class="rationale">${s.rationale}</div>
         ${hazmatStrip}
+        <div class="select-row">
+          <button type="button" class="select-btn" data-select-id="${s.nmfc_item_id}">Use this code</button>
+        </div>
       </div>
     `;
   }
@@ -529,6 +567,48 @@
   // answer can be merged in and re-sent without making the user retype the form.
   let lastPayload = null;
   let lastQuestion = null;
+  let lastResponseData = null;   // the full /suggest response, needed for logging selections
+  let lastDescription = null;
+
+  function wireSelectButtons() {
+    document.querySelectorAll('.select-btn').forEach((btn) => {
+      btn.addEventListener('click', () => logSelection(btn.dataset.selectId));
+    });
+  }
+
+  async function logSelection(selectedItemId) {
+    if (!lastResponseData || !lastDescription) return;
+
+    const base = document.getElementById('apiBase').value.replace(/\/$/, '');
+    const apiKey = document.getElementById('apiKey').value;
+
+    // Reflect the choice in the UI immediately, before waiting on the network call —
+    // this is a background analytics signal, not something that should block the user.
+    document.querySelectorAll('.tag').forEach((tag) => {
+      tag.classList.toggle('is-selected', tag.dataset.itemId === selectedItemId);
+    });
+    document.querySelectorAll('.select-btn').forEach((btn) => {
+      btn.disabled = true;
+      btn.textContent = btn.dataset.selectId === selectedItemId ? '✓ Selected' : 'Use this code';
+    });
+
+    try {
+      await fetch(`${base}/v1/nmfc/log-selection`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+        body: JSON.stringify({
+          description: lastDescription,
+          computed_density_pcf: lastResponseData.computed_density_pcf,
+          suggestions: lastResponseData.suggestions,
+          selected_item_id: selectedItemId,
+        }),
+      });
+      // Logging failures are silent by design here — this is a background signal,
+      // not something worth interrupting the user's workflow over.
+    } catch {
+      /* no-op */
+    }
+  }
 
   async function runClassification(payload, busyEl, busyLabel, idleLabel) {
     busyEl.disabled = true;
@@ -582,6 +662,10 @@
 
       lastPayload = payload;
       lastQuestion = data.clarifying_question;
+      lastResponseData = data;
+      lastDescription = payload.description;
+
+      wireSelectButtons();
 
       if (data.needs_clarification) {
         document.getElementById('refineBtn').addEventListener('click', submitClarification);

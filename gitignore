@@ -2,3 +2,5 @@ venv/
 embeddings_cache.npz
 __pycache__/
 *.pyc
+*service-account*.json
+google-credentials*.json
