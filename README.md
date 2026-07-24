@@ -1,12 +1,12 @@
 # NMFC Code Assistant
 
-An AI-assisted NMFC freight classification API for 3PL LTL shipping platform. Given a shipper's raw item description and shipment details, it returns ranked, confidence-scored NMFC code suggestions with plain-English rationale, reducing the misclassification rebills that happen when shippers guess at a code they don't actually know.
+An AI-assisted NMFC freight classification API for 3PL LTL shipping platforms. Given a shipper's raw item description and shipment details, it returns ranked, confidence-scored NMFC code suggestions with plain-English rationale, reducing the misclassification rebills that happen when shippers guess at a code they don't actually know.
 
 **This repo ships an API, not an app.** The included `demo.html` is a reference client that exercises the API end to end so you can see the classification logic working, but it's not the deliverable. The intended integration point is `POST /v1/nmfc/suggest`, meant to be embedded directly into a brokerage's existing shipment-order flow as a required-field assist, with the brokerage's own UI calling this endpoint instead of the demo shown here.
 
 ## The problem
 
-LTL freight class determines the rate a shipment is billed at. Most shippers know their item's dimensions and weight; very few know its exact NMFC code. When the code field is left blank or guessed incorrectly at booking, carriers reclassify and rebill after pickup, and customers can experience delays in their shipments. It's a real headache.
+LTL freight class determines the rate a shipment is billed at. Most shippers know their item's dimensions and weight; very few know its exact NMFC code. When the code field is left blank or guessed incorrectly at booking, carriers reclassify and rebill for more money and shippers run the risk of shipment delays. It's a real headache.
 
 Making NMFC code a required field at booking closes that gap, but only if getting it right is nearly as fast as leaving it blank. So, that's what this API is built to do: minimize funnel friction while still producing a defensible, explainable classification.
 
@@ -41,7 +41,7 @@ shipment input
    is too low to trust)
 ```
 
-Density is computed before the LLM ever sees the request, and each candidate's class is already resolved against that density before Claude ranks anything. (Claude is reasoning over pre-classified candidates, not doing the arithmetic itself.) This keeps the one part of the system with real financial consequences (the class-to-density mapping) fully deterministic and testable, and reserves the LLM for matching ambiguous free text to the right commodity, explaining why, and knowing when it doesn't know.
+Density is computed before the LLM ever sees the request, and each candidate's class is already resolved against that density before Claude ranks anything. This keeps class-to-density mapping fully deterministic and testable, and reserves the LLM for matching ambiguous free text to the right commodity, explaining why, and knowing when it doesn't know.
 
 ## API
 
@@ -77,17 +77,17 @@ When top confidence falls below ~0.5, `needs_clarification` flips to `true` with
 
 Full request/response schema is in `main.py`; interactive docs are auto-generated at `/docs` when the API is running (Swagger UI, via FastAPI).
 
+## Data source...read before considering this production-ready!!
+
+`sample_nmfc_dataset.json` is a completely made-up, illustrative commodity set built for this demo. **It is not the real NMFC tariff.** The actual National Motor Freight Classification is copyrighted and licensed through the National Motor Freight Traffic Association (NMFTA); a production deployment of this system would require licensing the full commodity dataset from NMFTA and replacing this file with it. The architecture (density calculator, embedding retrieval, reasoning layer, API contract) is unaffected by that swap; only the data file changes.
+
 ## Key design decisions
 
-- **One clarifying question, never a form.** Every additional required field before a confident suggestion is available is friction a shipper will abandon. The system asks the single most confidence-improving question and stops.
+- **One clarifying question, max.** Every additional required field before a confident suggestion is available is friction a shipper will abandon. The system asks the single most confidence-improving question and stops.
 - **NOI (catch-all) is always the fallback, never the leader.** The reasoning layer is explicitly instructed to deprioritize the generic "Not Otherwise Indicated" commodity below any reasonably-scoring specific match. Real rebills often trace back to a shipment defaulting into NOI when a cheaper, more specific classification actually applied.
 - **Hazmat is surfaced, never auto-confirmed.** A hazmat-flagged candidate is still shown and ranked, but the response explicitly notes it requires manual compliance review regardless of confidence score.
 - **Deterministic math stays deterministic.** Density-to-class resolution never goes through the LLM. This makes the one legally/financially sensitive calculation in the pipeline auditable and unit-testable independent of model behavior.
 - **The clarification loop is stateless by design.** No session or database is required to close the ask → answer → re-rank cycle; the caller resends the original payload plus the answer. Simpler to integrate into an existing booking flow that may not want to manage conversation state for a single field.
-
-## Data source...read before treating this as production-ready
-
-`sample_nmfc_dataset.json` is a synthetic, illustrative commodity set built for this demo. **It is not the real NMFC tariff.** The actual National Motor Freight Classification is copyrighted and licensed through the National Motor Freight Traffic Association (NMFTA); a production deployment of this system would require licensing the full commodity dataset from NMFTA and replacing this file with it. The architecture (density calculator, embedding retrieval, reasoning layer, API contract) is unaffected by that swap; only the data file changes.
 
 ## Running it locally
 
