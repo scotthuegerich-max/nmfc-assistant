@@ -6,7 +6,7 @@ An AI-assisted NMFC freight classification API for 3PL LTL shipping platforms. G
 
 ## The problem
 
-LTL freight class determines the rate a shipment is billed at. Most shippers know their item's dimensions and weight, but hardly anybody knows their item's NMFC code. When the code field is left blank or guessed incorrectly at booking, carriers reclassify and rebill for more money and shippers also run the risk of shipment delays. It's a real headache.
+LTL freight class determines the rate a shipment is billed at. Most shippers know their item's dimensions and weight, but hardly anybody knows their item's NMFC code. When the code field is left blank or guessed incorrectly at booking, carriers reclassify and rebill for more money and shippers also run the risk of shipment delays. It's a huge, expensive headache.
 
 Making NMFC code a required field in a shipping platform closes that gap, but only if getting it right is nearly as fast as leaving it blank. So, that's what this API is built to do: minimize funnel friction while still producing a defensible, explainable classification.
 
@@ -77,10 +77,6 @@ When top confidence falls below ~0.5, `needs_clarification` flips to `true` with
 
 Full request/response schema is in `main.py`; interactive docs are auto-generated at `/docs` when the API is running (Swagger UI, via FastAPI).
 
-## *IMPORTANT* Data source is make-believe - read before considering this production-ready!
-
-`sample_nmfc_dataset.json` is a completely made-up, illustrative commodity set built for this demo. **It is not the real NMFC tariff.** The actual National Motor Freight Classification is copyrighted and licensed through the National Motor Freight Traffic Association (NMFTA); a production deployment of this system would require licensing the full commodity dataset from NMFTA and replacing this file with it. The architecture (density calculator, embedding retrieval, reasoning layer, API contract) is unaffected by that swap; only the data file changes.
-
 ## Key design decisions
 
 - **One clarifying question, max.** Every additional required field before a confident suggestion is available is friction a shipper will abandon. The system asks the single most confidence-improving question and stops.
@@ -94,7 +90,7 @@ Full request/response schema is in `main.py`; interactive docs are auto-generate
 ```bash
 python3 -m venv venv && source venv/bin/activate   # Windows: venv\Scripts\activate
 pip install sentence-transformers fastapi anthropic uvicorn
-export ANTHROPIC_API_KEY=your_key                  # Windows: set ANTHROPIC_API_KEY=your_key
+export ANTHROPIC_API_KEY=your_key*                  # Windows: set ANTHROPIC_API_KEY=your_key
 export NMFC_API_KEY=your_own_demo_key
 
 python build_embeddings.py     # builds the retrieval cache once
@@ -102,6 +98,17 @@ uvicorn main:app --reload      # starts the API at localhost:8000
 ```
 
 Open `demo.html` directly in a browser to exercise the API through the reference client, or hit `/docs` for the interactive Swagger UI, or call `/v1/nmfc/suggest` directly from your own client.
+
+## *Data & privacy
+
+The reasoning layer is a bring-your-own-key (BYOK) architecture: ANTHROPIC_API_KEY is read from an environment variable at runtime, so whoever actually deploys this — you, or a brokerage running it themselves — controls which Anthropic account is billed and which commercial agreement governs the request. No code changes are needed for a brokerage to run this under their own account rather than the original developer's. Using a brokerage's own key means their requests run under their own Anthropic commercial terms, but it doesn't change what leaves their infrastructure. Every call to /v1/nmfc/suggest sends the item description, computed density, and the matched candidate commodity descriptions to Anthropic's API to get a ranked response back. Before pointing this at real, licensed NMFTA data, a brokerage's legal/security team should confirm directly with Anthropic:
+* Whether their specific account and usage pattern qualifies for zero data retention (ZDR)
+* Whether a data processing addendum (DPA) is in place 
+* Their own commercial API terms around data use and retention, since these are agreement-specific and shouldn't be assumed from general documentation
+
+## *Important Consideration -* Data source is make-believe.
+
+`sample_nmfc_dataset.json` is a completely made-up, illustrative commodity set built for this demo. **It is not the real NMFC tariff.** The actual National Motor Freight Classification is copyrighted and licensed through the National Motor Freight Traffic Association (NMFTA); a production deployment of this system would require licensing the full commodity dataset from NMFTA and replacing this file with it. The architecture (density calculator, embedding retrieval, reasoning layer, API contract) is unaffected by that swap; only the data file changes.
 
 ## What a real brokerage integration would need beyond this repo
 
