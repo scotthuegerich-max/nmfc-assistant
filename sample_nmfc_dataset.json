@@ -1,0 +1,427 @@
+{
+  "_disclaimer": "Illustrative/synthetic dataset for portfolio demo purposes only. Not derived from or reproducing the actual NMFC tariff, which is copyrighted and licensed through the National Motor Freight Traffic Association (NMFTA). A production deployment would require licensing the real commodity data from NMFTA.",
+  "commodities": [
+    {
+      "item_id": "SAMPLE-00101",
+      "commodity_description": "Furniture, wooden, unassembled, boxed",
+      "keywords": ["furniture", "wood", "unassembled", "boxed", "chair", "table", "flat-pack"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 1, "class": 400 },
+        { "min_density_pcf": 1, "max_density_pcf": 2, "class": 300 },
+        { "min_density_pcf": 2, "max_density_pcf": 4, "class": 175 },
+        { "min_density_pcf": 4, "max_density_pcf": 6, "class": 125 },
+        { "min_density_pcf": 6, "max_density_pcf": 8, "class": 100 },
+        { "min_density_pcf": 8, "max_density_pcf": 10, "class": 92.5 },
+        { "min_density_pcf": 10, "max_density_pcf": 12, "class": 85 },
+        { "min_density_pcf": 12, "max_density_pcf": 15, "class": 70 },
+        { "min_density_pcf": 15, "max_density_pcf": null, "class": 60 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "Class may increase if not palletized",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00102",
+      "commodity_description": "Furniture, wooden, assembled",
+      "keywords": ["furniture", "wood", "assembled", "chair", "table", "dresser"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 2, "class": 300 },
+        { "min_density_pcf": 2, "max_density_pcf": 4, "class": 200 },
+        { "min_density_pcf": 4, "max_density_pcf": 6, "class": 150 },
+        { "min_density_pcf": 6, "max_density_pcf": 8, "class": 125 },
+        { "min_density_pcf": 8, "max_density_pcf": 12, "class": 100 },
+        { "min_density_pcf": 12, "max_density_pcf": null, "class": 85 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "Assembled furniture is bulkier and harder to stow; higher class than unassembled equivalent at same density",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00103",
+      "commodity_description": "Sofas and upholstered seating, boxed or crated",
+      "keywords": ["sofa", "couch", "upholstered", "seating", "loveseat", "crated"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 1, "class": 400 },
+        { "min_density_pcf": 1, "max_density_pcf": 2, "class": 250 },
+        { "min_density_pcf": 2, "max_density_pcf": 4, "class": 175 },
+        { "min_density_pcf": 4, "max_density_pcf": 6, "class": 125 },
+        { "min_density_pcf": 6, "max_density_pcf": null, "class": 100 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "High damage/handling sensitivity; crating reduces liability class step",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00201",
+      "commodity_description": "Machinery parts, metal, unpackaged, small components",
+      "keywords": ["machinery", "parts", "metal", "components", "gears", "brackets", "unpackaged"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 6, "class": 100 },
+        { "min_density_pcf": 6, "max_density_pcf": 12, "class": 85 },
+        { "min_density_pcf": 12, "max_density_pcf": 20, "class": 70 },
+        { "min_density_pcf": 20, "max_density_pcf": null, "class": 60 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "Loose small metal parts should be palletized or crated to avoid handling class increase",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00202",
+      "commodity_description": "Machinery, industrial, crated, heavy equipment",
+      "keywords": ["machinery", "industrial", "heavy equipment", "crated", "pump", "compressor", "motor"],
+      "density_based": false,
+      "density_class_table": null,
+      "fixed_class": 65,
+      "packaging_notes": "Fixed class regardless of density due to standardized crating and handling requirements",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00203",
+      "commodity_description": "Machine tools, precision, boxed",
+      "keywords": ["machine tools", "precision", "lathe", "milling", "cnc", "boxed"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 10, "class": 85 },
+        { "min_density_pcf": 10, "max_density_pcf": 20, "class": 70 },
+        { "min_density_pcf": 20, "max_density_pcf": null, "class": 60 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "High liability due to precision components; insurance value should be flagged separately",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00301",
+      "commodity_description": "Packaged goods, canned foods, palletized",
+      "keywords": ["canned goods", "food", "packaged", "palletized", "groceries"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 15, "class": 65 },
+        { "min_density_pcf": 15, "max_density_pcf": 22, "class": 60 },
+        { "min_density_pcf": 22, "max_density_pcf": null, "class": 55 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "Standard palletized dry goods; low handling sensitivity",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00302",
+      "commodity_description": "Packaged goods, boxed retail merchandise, mixed/general",
+      "keywords": ["retail", "merchandise", "boxed", "general goods", "mixed goods"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 1, "class": 400 },
+        { "min_density_pcf": 1, "max_density_pcf": 2, "class": 300 },
+        { "min_density_pcf": 2, "max_density_pcf": 4, "class": 175 },
+        { "min_density_pcf": 4, "max_density_pcf": 6, "class": 125 },
+        { "min_density_pcf": 6, "max_density_pcf": 8, "class": 100 },
+        { "min_density_pcf": 8, "max_density_pcf": 10, "class": 92.5 },
+        { "min_density_pcf": 10, "max_density_pcf": null, "class": 85 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "Catch-all category for mixed retail goods when no more specific commodity applies",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00303",
+      "commodity_description": "Bottled beverages, non-alcoholic, palletized, glass containers",
+      "keywords": ["bottled", "beverages", "glass", "drinks", "palletized"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 15, "class": 70 },
+        { "min_density_pcf": 15, "max_density_pcf": null, "class": 60 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "Glass containers raise handling/breakage liability vs. plastic equivalents",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00401",
+      "commodity_description": "Electronics, consumer, boxed (TVs, monitors, small appliances)",
+      "keywords": ["electronics", "consumer", "tv", "monitor", "appliance", "boxed"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 2, "class": 200 },
+        { "min_density_pcf": 2, "max_density_pcf": 4, "class": 150 },
+        { "min_density_pcf": 4, "max_density_pcf": 6, "class": 125 },
+        { "min_density_pcf": 6, "max_density_pcf": 10, "class": 100 },
+        { "min_density_pcf": 10, "max_density_pcf": null, "class": 92.5 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "Fragile/high-value; original manufacturer packaging reduces handling class",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00402",
+      "commodity_description": "Electronics, computer servers/networking equipment, crated",
+      "keywords": ["servers", "networking", "data center", "computer equipment", "crated", "rack"],
+      "density_based": false,
+      "density_class_table": null,
+      "fixed_class": 92.5,
+      "packaging_notes": "High liability/value item; fixed class reflects standardized crating requirements",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00403",
+      "commodity_description": "Electronics, wire and cable, spooled",
+      "keywords": ["wire", "cable", "spooled", "electrical", "reel"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 15, "class": 85 },
+        { "min_density_pcf": 15, "max_density_pcf": 30, "class": 70 },
+        { "min_density_pcf": 30, "max_density_pcf": null, "class": 60 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "Dense, heavy spools; low damage risk but high weight concentration",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00501",
+      "commodity_description": "Building materials, lumber, bundled",
+      "keywords": ["lumber", "wood", "building materials", "bundled", "boards"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 15, "class": 55 },
+        { "min_density_pcf": 15, "max_density_pcf": null, "class": 50 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "Standard bundled lumber; low class due to durability and stowability",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00502",
+      "commodity_description": "Building materials, ceramic tile, boxed",
+      "keywords": ["tile", "ceramic", "flooring", "boxed", "building materials"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 20, "class": 70 },
+        { "min_density_pcf": 20, "max_density_pcf": null, "class": 60 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "Fragile; breakage liability higher than density alone would suggest",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00503",
+      "commodity_description": "Building materials, insulation, rolled or batted, boxed",
+      "keywords": ["insulation", "fiberglass", "rolled", "batted", "building materials"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 1, "class": 400 },
+        { "min_density_pcf": 1, "max_density_pcf": 2, "class": 300 },
+        { "min_density_pcf": 2, "max_density_pcf": null, "class": 175 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "Very low density, high cube; classic low-density high-class example",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00601",
+      "commodity_description": "Automotive parts, engine components, boxed",
+      "keywords": ["automotive", "engine", "parts", "boxed", "car parts"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 10, "class": 85 },
+        { "min_density_pcf": 10, "max_density_pcf": 20, "class": 70 },
+        { "min_density_pcf": 20, "max_density_pcf": null, "class": 60 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "Standard boxed metal auto parts",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00602",
+      "commodity_description": "Automotive parts, tires, unmounted, bundled",
+      "keywords": ["tires", "automotive", "rubber", "unmounted", "bundled"],
+      "density_based": false,
+      "density_class_table": null,
+      "fixed_class": 100,
+      "packaging_notes": "Standardized class for unmounted tire bundles regardless of density variance",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00701",
+      "commodity_description": "Textiles, clothing, boxed, folded/packed",
+      "keywords": ["clothing", "textiles", "apparel", "boxed", "garments"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 1, "class": 400 },
+        { "min_density_pcf": 1, "max_density_pcf": 2, "class": 300 },
+        { "min_density_pcf": 2, "max_density_pcf": 4, "class": 200 },
+        { "min_density_pcf": 4, "max_density_pcf": null, "class": 150 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "Low density soft goods; class drops significantly if compressed/vacuum-packed",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00702",
+      "commodity_description": "Textiles, carpet and rugs, rolled",
+      "keywords": ["carpet", "rugs", "rolled", "flooring", "textiles"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 6, "class": 125 },
+        { "min_density_pcf": 6, "max_density_pcf": 12, "class": 100 },
+        { "min_density_pcf": 12, "max_density_pcf": null, "class": 85 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "Rolled goods; awkward dimensions may add handling surcharge outside class itself",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00801",
+      "commodity_description": "Paper products, boxed, printed materials/books",
+      "keywords": ["paper", "books", "printed materials", "boxed", "documents"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 12, "class": 65 },
+        { "min_density_pcf": 12, "max_density_pcf": null, "class": 55 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "Dense, uniform boxed goods; low class typical",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00802",
+      "commodity_description": "Paper products, cardboard/packaging materials, flattened, bundled",
+      "keywords": ["cardboard", "packaging materials", "flattened", "bundled", "boxes empty"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 1, "class": 300 },
+        { "min_density_pcf": 1, "max_density_pcf": 3, "class": 200 },
+        { "min_density_pcf": 3, "max_density_pcf": null, "class": 150 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "Flattened/empty boxes are very low density despite bulk weight of bundle",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00901",
+      "commodity_description": "Plastics, molded parts, boxed",
+      "keywords": ["plastic", "molded parts", "boxed", "components"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 4, "class": 150 },
+        { "min_density_pcf": 4, "max_density_pcf": 8, "class": 100 },
+        { "min_density_pcf": 8, "max_density_pcf": null, "class": 85 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "Standard boxed plastic components",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-00902",
+      "commodity_description": "Plastics, sheet or film, rolled",
+      "keywords": ["plastic sheet", "film", "rolled", "packaging film"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 6, "class": 125 },
+        { "min_density_pcf": 6, "max_density_pcf": null, "class": 100 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "Rolled film goods; moderate density range",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-01001",
+      "commodity_description": "Chemicals, non-hazardous, cleaning supplies, boxed liquid containers",
+      "keywords": ["chemicals", "cleaning supplies", "liquid", "boxed", "detergent"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 15, "class": 65 },
+        { "min_density_pcf": 15, "max_density_pcf": null, "class": 55 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "Non-hazardous only; verify SDS before applying this class — hazmat variants require separate handling",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-01002",
+      "commodity_description": "Chemicals, flammable liquids, drummed (HAZMAT)",
+      "keywords": ["chemicals", "flammable", "hazmat", "drummed", "liquid"],
+      "density_based": false,
+      "density_class_table": null,
+      "fixed_class": 60,
+      "packaging_notes": "Requires hazmat placarding, UN packaging certification, and shipper's declaration; class alone is insufficient for compliance — flag for manual review, do not auto-suggest without human confirmation of hazmat handling requirements",
+      "hazmat_flag": true
+    },
+    {
+      "item_id": "SAMPLE-01101",
+      "commodity_description": "Medical/lab equipment, boxed, non-hazardous",
+      "keywords": ["medical equipment", "lab equipment", "boxed", "diagnostic"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 6, "class": 125 },
+        { "min_density_pcf": 6, "max_density_pcf": 12, "class": 100 },
+        { "min_density_pcf": 12, "max_density_pcf": null, "class": 85 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "High value/fragility; recommend crating for anything above minimal density threshold",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-01401",
+      "commodity_description": "Batteries, dry cell, non-lithium (e.g. alkaline), boxed",
+      "keywords": ["batteries", "dry cell", "alkaline", "non-lithium", "boxed", "consumer batteries"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 4, "class": 125 },
+        { "min_density_pcf": 4, "max_density_pcf": 8, "class": 100 },
+        { "min_density_pcf": 8, "max_density_pcf": 12, "class": 92.5 },
+        { "min_density_pcf": 12, "max_density_pcf": null, "class": 85 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "Standard non-hazmat dry cell batteries (alkaline, NiMH); confirm chemistry before applying this class, as lithium chemistries fall under a separate hazmat commodity",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-01402",
+      "commodity_description": "Batteries, lithium-ion, boxed or crated (HAZMAT)",
+      "keywords": ["batteries", "lithium-ion", "lithium", "cells", "packs", "hazmat", "boxed", "crated"],
+      "density_based": false,
+      "density_class_table": null,
+      "fixed_class": 85,
+      "packaging_notes": "Lithium-ion cells/packs require hazmat placarding and UN-certified packaging per DOT regulations, and the applicable battery-specific NMFC sub-item depends on whether cells are standalone or packed with/contained in equipment; class alone is insufficient for compliance — flag for manual review, do not auto-suggest without human confirmation of hazmat handling requirements",
+      "hazmat_flag": true
+    },
+    {
+      "item_id": "SAMPLE-01301",
+      "commodity_description": "Articles or goods, NOI (Not Otherwise Indicated), boxed or crated",
+      "keywords": ["noi", "not otherwise indicated", "general goods", "miscellaneous", "unclassified", "catch-all"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 1, "class": 400 },
+        { "min_density_pcf": 1, "max_density_pcf": 2, "class": 300 },
+        { "min_density_pcf": 2, "max_density_pcf": 4, "class": 250 },
+        { "min_density_pcf": 4, "max_density_pcf": 6, "class": 175 },
+        { "min_density_pcf": 6, "max_density_pcf": 8, "class": 125 },
+        { "min_density_pcf": 8, "max_density_pcf": 10, "class": 100 },
+        { "min_density_pcf": 10, "max_density_pcf": 12, "class": 92.5 },
+        { "min_density_pcf": 12, "max_density_pcf": 15, "class": 85 },
+        { "min_density_pcf": 15, "max_density_pcf": 22.5, "class": 70 },
+        { "min_density_pcf": 22.5, "max_density_pcf": 30, "class": 65 },
+        { "min_density_pcf": 30, "max_density_pcf": null, "class": 60 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "General catch-all commodity used when an item doesn't match a more specific NMFC description; this should be the lowest-confidence fallback match in your retrieval layer, never the top suggestion if a more specific commodity entry scores reasonably close",
+      "hazmat_flag": false
+    },
+    {
+      "item_id": "SAMPLE-01201",
+      "commodity_description": "Sporting goods, boxed, mixed equipment",
+      "keywords": ["sporting goods", "equipment", "boxed", "recreational"],
+      "density_based": true,
+      "density_class_table": [
+        { "min_density_pcf": 0, "max_density_pcf": 4, "class": 150 },
+        { "min_density_pcf": 4, "max_density_pcf": 8, "class": 100 },
+        { "min_density_pcf": 8, "max_density_pcf": null, "class": 85 }
+      ],
+      "fixed_class": null,
+      "packaging_notes": "Mixed density category; varies widely by specific item (bicycles vs. weights)",
+      "hazmat_flag": false
+    }
+  ]
+}

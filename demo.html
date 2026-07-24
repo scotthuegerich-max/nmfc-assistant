@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NMFC Assistant — Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1c1a17;
+    --dock: #2b2e2c;
+    --dock-line: #454945;
+    --manila: #d8c39a;
+    --manila-dark: #c0a978;
+    --manila-shadow: #a9906257;
+    --amber: #e08e1d;
+    --amber-dark: #a8660d;
+    --teal: #3e6b63;
+    --teal-dark: #2b4d46;
+    --chalk: #efe9dd;
+    --paper-bg: #201f1d;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper-bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- header ---------- */
+  header {
+    background: var(--dock);
+    color: var(--chalk);
+    padding: 28px 32px 24px;
+    border-bottom: 3px solid var(--amber);
+  }
+
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: clamp(28px, 4vw, 40px);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin: 0;
+    line-height: 1;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: #b9b3a5;
+    margin-top: 6px;
+    letter-spacing: 0.02em;
+  }
+
+  .status {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: #b9b3a5;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #6b6f6c;
+    flex-shrink: 0;
+  }
+  .status-dot.ok { background: #6fae94; }
+  .status-dot.bad { background: var(--amber); }
+
+  /* ---------- layout ---------- */
+  main {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+
+  @media (max-width: 780px) {
+    main { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- form card ---------- */
+  .card {
+    background: var(--manila);
+    border-radius: 4px;
+    padding: 24px;
+    box-shadow: 0 6px 0 var(--manila-shadow);
+    position: relative;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 14px;
+    left: -7px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--paper-bg);
+    box-shadow: inset 0 0 0 2px var(--manila-dark);
+  }
+
+  .card h2 {
+    font-family: 'Oswald', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 18px;
+    color: var(--ink);
+    border-bottom: 2px solid var(--manila-dark);
+    padding-bottom: 10px;
+  }
+
+  label {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--teal-dark);
+    margin: 16px 0 6px;
+  }
+  label:first-of-type { margin-top: 0; }
+
+  input[type="text"],
+  input[type="number"],
+  textarea,
+  select {
+    width: 100%;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    padding: 9px 10px;
+    border: 1.5px solid var(--manila-dark);
+    border-radius: 3px;
+    background: #fdfaf3;
+    color: var(--ink);
+  }
+
+  textarea { resize: vertical; min-height: 64px; font-family: 'IBM Plex Sans', sans-serif; }
+
+  input:focus, textarea:focus, select:focus {
+    outline: 3px solid var(--teal);
+    outline-offset: 1px;
+    border-color: var(--teal);
+  }
+
+  .dim-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .dim-grid input { text-align: center; }
+
+  .toggle-row {
+    display: flex;
+    gap: 14px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--ink);
+  }
+  .toggle input { width: auto; }
+
+  button.submit {
+    margin-top: 22px;
+    width: 100%;
+    background: var(--teal);
+    color: var(--chalk);
+    border: none;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-size: 15px;
+    padding: 13px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  button.submit:hover { background: var(--teal-dark); }
+  button.submit:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+  button.submit:disabled { background: #7d8783; cursor: wait; }
+
+  .api-key-field { margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--manila-dark); }
+
+  /* ---------- results ---------- */
+  .results-empty {
+    font-family: 'IBM Plex Mono', monospace;
+    color: #8f887a;
+    font-size: 14px;
+    border: 2px dashed #4a4d4a;
+    border-radius: 4px;
+    padding: 48px 24px;
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  .density-stamp {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    background: var(--chalk);
+    color: var(--ink);
+    padding: 10px 18px;
+    border-radius: 3px;
+    border: 2px solid var(--teal);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-bottom: 20px;
+  }
+  .density-stamp .num { font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 700; color: var(--teal-dark); }
+  .density-stamp .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b6f6c; }
+
+  .clarify-banner {
+    background: var(--amber);
+    color: #2b1c04;
+    padding: 16px 18px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .clarify-banner strong {
+    font-family: 'Oswald', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+  }
+  .clarify-banner p { margin: 0 0 12px; font-size: 14.5px; line-height: 1.4; }
+
+  .clarify-answer-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .clarify-answer-row input {
+    flex: 1;
+    min-width: 200px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13.5px;
+    padding: 8px 10px;
+    border: 1.5px solid var(--amber-dark);
+    border-radius: 3px;
+    background: #fffaf0;
+    color: var(--ink);
+  }
+  .clarify-answer-row input:focus {
+    outline: 3px solid var(--teal);
+    outline-offset: 1px;
+  }
+  button.refine {
+    background: var(--ink);
+    color: var(--chalk);
+    border: none;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 13px;
+    padding: 8px 16px;
+    border-radius: 3px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  button.refine:hover { background: #3a352c; }
+  button.refine:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
+  button.refine:disabled { background: #7d8783; cursor: wait; }
+
+  .tag {
+    background: var(--manila);
+    border-radius: 4px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    position: relative;
+    box-shadow: 0 4px 0 var(--manila-shadow);
+  }
+  .tag:first-of-type { border: 2px solid var(--teal); }
+
+  .tag::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: -6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--paper-bg);
+    box-shadow: inset 0 0 0 2px var(--manila-dark);
+  }
+
+  .tag-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .tag-id {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--teal-dark);
+    letter-spacing: 0.04em;
+  }
+
+  .tag-desc {
+    font-size: 15px;
+    font-weight: 500;
+    margin: 3px 0 10px;
+    color: var(--ink);
+  }
+
+  .class-stamp {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    color: var(--teal-dark);
+    text-align: right;
+    white-space: nowrap;
+    line-height: 1;
+  }
+  .class-stamp span {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: #6b6f6c;
+    text-transform: uppercase;
+  }
+
+  .gauge {
+    height: 6px;
+    background: #b8a479;
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 4px 0 10px;
+  }
+  .gauge-fill { height: 100%; background: var(--teal); }
+  .gauge-fill.low { background: var(--amber); }
+
+  .confidence-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: #6b6f6c;
+    margin-bottom: 10px;
+  }
+
+  .rationale {
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: #3a352c;
+  }
+
+  .hazmat-strip {
+    margin-top: 10px;
+    background: var(--amber-dark);
+    color: var(--chalk);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    letter-spacing: 0.03em;
+    padding: 6px 10px;
+    border-radius: 3px;
+  }
+
+  .error-box {
+    background: #3a1f14;
+    color: #f0c9a8;
+    border: 1.5px solid var(--amber-dark);
+    border-radius: 4px;
+    padding: 16px 18px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <div>
+      <h1>NMFC Assistant</h1>
+      <div class="subtitle">LTL freight classification assistant — enter what you know, verify what it finds</div>
+    </div>
+    <div class="status">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">checking api…</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Shipment Details</h2>
+    <form id="suggestForm">
+      <label for="description">Item description</label>
+      <textarea id="description" placeholder="e.g. wooden dining table, unassembled, in cardboard box" required></textarea>
+
+      <label>Dimensions (inches) &amp; weight (lbs)</label>
+      <div class="dim-grid">
+        <input type="number" id="length_in" placeholder="L" min="0.1" step="any" required>
+        <input type="number" id="width_in" placeholder="W" min="0.1" step="any" required>
+        <input type="number" id="height_in" placeholder="H" min="0.1" step="any" required>
+      </div>
+      <div class="dim-grid" style="margin-top:8px; grid-template-columns: 1fr;">
+        <input type="number" id="weight_lbs" placeholder="Weight (lbs)" min="0.1" step="any" required>
+      </div>
+
+      <label for="packaging">Packaging</label>
+      <select id="packaging">
+        <option value="boxed">Boxed</option>
+        <option value="crated">Crated</option>
+        <option value="palletized">Palletized</option>
+        <option value="unpackaged">Unpackaged / loose</option>
+        <option value="bundled">Bundled</option>
+      </select>
+
+      <div class="toggle-row">
+        <label class="toggle"><input type="checkbox" id="palletized"> Palletized</label>
+        <label class="toggle"><input type="checkbox" id="stackable" checked> Stackable</label>
+        <label class="toggle"><input type="checkbox" id="hazmat"> Hazmat</label>
+      </div>
+
+      <div class="api-key-field">
+        <label for="apiKey">API base URL</label>
+        <input type="text" id="apiBase" value="http://localhost:8000">
+        <label for="apiKey">X-API-Key</label>
+        <input type="text" id="apiKey" placeholder="your NMFC_API_KEY value">
+      </div>
+
+      <button type="submit" class="submit" id="submitBtn">Get classification</button>
+    </form>
+  </section>
+
+  <section id="results">
+    <div class="results-empty">Enter shipment details and submit to see ranked NMFC suggestions.</div>
+  </section>
+</main>
+
+<script>
+  const form = document.getElementById('suggestForm');
+  const results = document.getElementById('results');
+  const submitBtn = document.getElementById('submitBtn');
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+
+  async function checkHealth() {
+    const base = document.getElementById('apiBase').value.replace(/\/$/, '');
+    try {
+      const res = await fetch(`${base}/health`);
+      if (res.ok) {
+        statusDot.className = 'status-dot ok';
+        statusText.textContent = 'api connected';
+      } else {
+        throw new Error();
+      }
+    } catch {
+      statusDot.className = 'status-dot bad';
+      statusText.textContent = 'api unreachable';
+    }
+  }
+  checkHealth();
+  document.getElementById('apiBase').addEventListener('change', checkHealth);
+
+  function confidenceClass(c) {
+    return c < 0.5 ? 'low' : '';
+  }
+
+  function renderTag(s) {
+    const pct = Math.round(s.confidence * 100);
+    const hazmatStrip = s.hazmat_flag
+      ? `<div class="hazmat-strip">⚠ HAZMAT — requires manual compliance review regardless of confidence</div>`
+      : '';
+    return `
+      <div class="tag">
+        <div class="tag-top-row">
+          <div>
+            <div class="tag-id">${s.nmfc_item_id}</div>
+            <div class="tag-desc">${s.commodity_description}</div>
+          </div>
+          <div class="class-stamp">${s.suggested_class}<span>class</span></div>
+        </div>
+        <div class="confidence-label">confidence ${pct}%</div>
+        <div class="gauge"><div class="gauge-fill ${confidenceClass(s.confidence)}" style="width:${pct}%"></div></div>
+        <div class="rationale">${s.rationale}</div>
+        ${hazmatStrip}
+      </div>
+    `;
+  }
+
+  // Tracks the most recently submitted payload and question so a clarification
+  // answer can be merged in and re-sent without making the user retype the form.
+  let lastPayload = null;
+  let lastQuestion = null;
+
+  async function runClassification(payload, busyEl, busyLabel, idleLabel) {
+    busyEl.disabled = true;
+    busyEl.textContent = busyLabel;
+    results.innerHTML = `<div class="results-empty">Running density calculation, retrieval, and classification…</div>`;
+
+    const base = document.getElementById('apiBase').value.replace(/\/$/, '');
+    const apiKey = document.getElementById('apiKey').value;
+
+    try {
+      const res = await fetch(`${base}/v1/nmfc/suggest`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': apiKey,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.detail || `Request failed with status ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      let html = `
+        <div class="density-stamp">
+          <span class="num">${data.computed_density_pcf}</span>
+          <span class="lbl">lbs / cu ft</span>
+        </div>
+      `;
+
+      if (data.needs_clarification) {
+        html += `
+          <div class="clarify-banner">
+            <div style="width:100%">
+              <strong>Needs one more detail</strong>
+              <p>${data.clarifying_question}</p>
+              <div class="clarify-answer-row">
+                <input type="text" id="clarifyAnswer" placeholder="Type your answer…">
+                <button type="button" class="refine" id="refineBtn">Refine</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      html += data.suggestions.map(renderTag).join('');
+      results.innerHTML = html;
+
+      lastPayload = payload;
+      lastQuestion = data.clarifying_question;
+
+      if (data.needs_clarification) {
+        document.getElementById('refineBtn').addEventListener('click', submitClarification);
+        document.getElementById('clarifyAnswer').addEventListener('keydown', (ev) => {
+          if (ev.key === 'Enter') { ev.preventDefault(); submitClarification(); }
+        });
+      }
+    } catch (err) {
+      results.innerHTML = `
+        <div class="error-box">
+          Couldn't get a classification.<br>
+          ${err.message}<br><br>
+          Check that the API is running at the base URL above, and that your API key matches NMFC_API_KEY in that terminal session.
+        </div>
+      `;
+    } finally {
+      busyEl.disabled = false;
+      busyEl.textContent = idleLabel;
+    }
+  }
+
+  function submitClarification() {
+    const answerInput = document.getElementById('clarifyAnswer');
+    const answer = answerInput.value.trim();
+    if (!answer || !lastPayload) return;
+
+    const refinedPayload = {
+      ...lastPayload,
+      previous_clarifying_question: lastQuestion,
+      clarification_answer: answer,
+    };
+
+    const refineBtn = document.getElementById('refineBtn');
+    runClassification(refinedPayload, refineBtn, 'Refining…', 'Refine');
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const payload = {
+      description: document.getElementById('description').value,
+      length_in: parseFloat(document.getElementById('length_in').value),
+      width_in: parseFloat(document.getElementById('width_in').value),
+      height_in: parseFloat(document.getElementById('height_in').value),
+      weight_lbs: parseFloat(document.getElementById('weight_lbs').value),
+      packaging: document.getElementById('packaging').value,
+      palletized: document.getElementById('palletized').checked,
+      stackable: document.getElementById('stackable').checked,
+      hazmat: document.getElementById('hazmat').checked,
+    };
+
+    runClassification(payload, submitBtn, 'Classifying…', 'Get classification');
+  });
+</script>
+
+</body>
+</html>
