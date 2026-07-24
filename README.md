@@ -79,7 +79,7 @@ Full request/response schema is in `main.py`; interactive docs are auto-generate
 
 **Reference client, shown for illustration — not the deliverable.** This is `demo.html` exercising the API against an ambiguous test case (a generic "ping pong balls" description with no specific commodity in the reference set). Confidence lands below the threshold on the top match, so retrieval falls back to the nearest general categories rather than forcing a false-confident pick — the actual product surface for a brokerage integration is the JSON response driving this, not this particular interface.
 
-![NMFC Assistant reference client showing ranked suggestions for an ambiguous item description](screenshots/demo-reference-client.png)
+![NMFC Assistant reference client showing ranked suggestions for an ambiguous item description](screenshots/demo-reference-client.PNG)
 
 ## Key design decisions
 
