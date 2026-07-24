@@ -2,11 +2,11 @@
 
 An AI-assisted NMFC freight classification API for 3PL LTL shipping platforms. Given a shipper's raw item description and shipment details, it returns ranked, confidence-scored NMFC code suggestions with plain-English rationale, reducing the misclassification rebills that happen when shippers guess at a code they don't actually know.
 
-**This repo ships an API, not an app.** The included `demo.html` is just a wrapper that exercises the API end to end so you can see the classification logic working, but it's not the deliverable. The intended integration point is `POST /v1/nmfc/suggest`, meant to be embedded directly into a brokerage's existing shipment-order flow as a required-field assist, with the brokerage's own UI calling this endpoint instead of the demo shown here.
+**This repo is an API, not an app.** The included `demo.html` is just a wrapper that exercises the API end to end just so you can see the classification logic working. The intended integration point is `POST /v1/nmfc/suggest`, meant to be embedded directly into a brokerage's existing shipment-order flow as a required-field assist, with the brokerage's own UI calling this endpoint instead of the demo shown here.
 
 ## The problem
 
-LTL freight class determines the rate a shipment is billed at. Most shippers know their item's dimensions and weight. Hardly anybody knows their item's NMFC code. When the code field is left blank or guessed incorrectly at booking, carriers reclassify and rebill for more money and shippers run the risk of shipment delays. It's a real headache.
+LTL freight class determines the rate a shipment is billed at. Most shippers know their item's dimensions and weight, but hardly anybody knows their item's NMFC code. When the code field is left blank or guessed incorrectly at booking, carriers reclassify and rebill for more money and shippers also run the risk of shipment delays. It's a real headache.
 
 Making NMFC code a required field in a shipping platform closes that gap, but only if getting it right is nearly as fast as leaving it blank. So, that's what this API is built to do: minimize funnel friction while still producing a defensible, explainable classification.
 
