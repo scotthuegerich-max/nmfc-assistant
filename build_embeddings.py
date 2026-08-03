@@ -2,33 +2,38 @@
 build_embeddings.py
 
 Builds vector embeddings for every commodity entry in sample_nmfc_dataset.json
-and caches them to disk, so the retrieval layer doesn't recompute embeddings
-on every API request.
+via the Voyage AI embeddings API, and caches them to disk so the retrieval
+layer doesn't recompute embeddings on every request.
 
-Model: sentence-transformers/all-MiniLM-L6-v2
-  - Free, runs locally, no API key required, small enough to embed at build
-    time or even cold-start in a lightweight API deployment.
-  - If you'd rather standardize on a single AI provider for the whole stack
-    (e.g. use Voyage AI embeddings since Claude/Anthropic recommends Voyage
-    for retrieval), swap embed_texts() below for a Voyage API call — the
-    rest of the pipeline (caching, cosine similarity, search) stays the same.
+Model: voyage-3.5-lite (configurable via VOYAGE_MODEL env var)
+  - Hosted embedding API — no local model weights, no PyTorch, minimal memory
+    footprint. This replaced an earlier local sentence-transformers approach,
+    which used too much RAM to run on a 512MB hosting tier.
+  - Requires a VOYAGE_API_KEY environment variable (voyageai.com).
 
 Usage:
-    python build_embeddings.py            # builds and caches embeddings.npz
+    python build_embeddings.py            # builds and caches embeddings_cache.npz
     python build_embeddings.py --query "wooden dining table, unassembled"
 """
 
+import os
 import json
-import sys
 import argparse
 from pathlib import Path
 
 import numpy as np
-from sentence_transformers import SentenceTransformer
+import voyageai
 
 DATASET_PATH = Path(__file__).parent / "sample_nmfc_dataset.json"
 CACHE_PATH = Path(__file__).parent / "embeddings_cache.npz"
-MODEL_NAME = "all-MiniLM-L6-v2"
+VOYAGE_MODEL = os.environ.get("VOYAGE_MODEL", "voyage-3.5-lite")
+
+
+def _client() -> voyageai.Client:
+    api_key = os.environ.get("VOYAGE_API_KEY")
+    if not api_key:
+        raise RuntimeError("VOYAGE_API_KEY must be set as an environment variable.")
+    return voyageai.Client(api_key=api_key)
 
 
 def load_dataset(path: Path = DATASET_PATH) -> list[dict]:
@@ -48,6 +53,12 @@ def build_embedding_text(entry: dict) -> str:
     return f"{description}. Related terms: {keywords}"
 
 
+def _normalize(vectors: np.ndarray) -> np.ndarray:
+    norms = np.linalg.norm(vectors, axis=1, keepdims=True)
+    norms[norms == 0] = 1  # avoid divide-by-zero on a degenerate vector
+    return vectors / norms
+
+
 def build_and_cache_embeddings(
     dataset_path: Path = DATASET_PATH, cache_path: Path = CACHE_PATH
 ) -> None:
@@ -55,17 +66,13 @@ def build_and_cache_embeddings(
     texts = [build_embedding_text(c) for c in commodities]
     item_ids = [c["item_id"] for c in commodities]
 
-    print(f"Loading model '{MODEL_NAME}'...")
-    model = SentenceTransformer(MODEL_NAME)
+    print(f"Embedding {len(texts)} commodity entries via Voyage ({VOYAGE_MODEL})...")
+    # input_type="document" tells Voyage these are corpus entries being indexed,
+    # not search queries — Voyage embeds the two differently for better retrieval.
+    result = _client().embed(texts, model=VOYAGE_MODEL, input_type="document")
+    embeddings = _normalize(np.array(result.embeddings, dtype=np.float32))
 
-    print(f"Embedding {len(texts)} commodity entries...")
-    embeddings = model.encode(texts, normalize_embeddings=True, show_progress_bar=True)
-
-    np.savez(
-        cache_path,
-        item_ids=np.array(item_ids),
-        embeddings=embeddings.astype(np.float32),
-    )
+    np.savez(cache_path, item_ids=np.array(item_ids), embeddings=embeddings)
     print(f"Cached {len(item_ids)} embeddings to {cache_path}")
 
 
@@ -83,21 +90,20 @@ def search(
     top_k: int = 5,
     dataset_path: Path = DATASET_PATH,
     cache_path: Path = CACHE_PATH,
-    model: SentenceTransformer | None = None,
 ) -> list[dict]:
     """
-    Embed the query and return the top_k closest commodity entries by
-    cosine similarity. Since cached embeddings are pre-normalized, cosine
-    similarity reduces to a dot product.
+    Embed the query via Voyage (input_type="query" — asymmetric from the
+    "document" embeddings above, optimized for retrieval) and return the
+    top_k closest commodity entries by cosine similarity. Since both sides
+    are normalized, cosine similarity reduces to a dot product.
     """
     item_ids, embeddings = load_cached_embeddings(cache_path)
     commodities = {c["item_id"]: c for c in load_dataset(dataset_path)}
 
-    if model is None:
-        model = SentenceTransformer(MODEL_NAME)
+    result = _client().embed([query], model=VOYAGE_MODEL, input_type="query")
+    query_vec = _normalize(np.array(result.embeddings, dtype=np.float32))[0]
 
-    query_vec = model.encode([query], normalize_embeddings=True)[0]
-    similarities = embeddings @ query_vec  # dot product == cosine sim (normalized)
+    similarities = embeddings @ query_vec
 
     top_indices = np.argsort(similarities)[::-1][:top_k]
 

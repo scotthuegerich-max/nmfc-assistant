@@ -1,6 +1,6 @@
 fastapi
 uvicorn[standard]
 anthropic
-sentence-transformers
+voyageai
 gspread
 google-auth

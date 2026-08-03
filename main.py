@@ -35,24 +35,10 @@ from pydantic import BaseModel, Field
 import anthropic
 
 from density import compute_density_pcf, resolve_class
-from build_embeddings import search, load_dataset, MODEL_NAME
-from sentence_transformers import SentenceTransformer
+from build_embeddings import search, load_dataset
 import sheets_logger
 
 app = FastAPI(title="NMFC Code Suggestion API", version="0.1.0")
-
-# The embedding model is loaded once here, at process startup, and reused for
-# every request. Loading it fresh per-request (the previous behavior when no
-# model was passed to search()) was the single biggest source of latency —
-# several seconds of model initialization on every call for no reason, since
-# the model itself never changes between requests.
-_embedding_model: Optional[SentenceTransformer] = None
-
-
-@app.on_event("startup")
-def load_embedding_model():
-    global _embedding_model
-    _embedding_model = SentenceTransformer(MODEL_NAME)
 
 # Demo-only: allows the standalone HTML frontend (opened as a local file, a different
 # "origin" than the API) to call this endpoint from the browser. Lock this down to
@@ -166,7 +152,7 @@ def build_candidate_payload(request: SuggestRequest, top_k: int = 5) -> tuple[fl
     if request.clarification_answer:
         retrieval_query = f"{request.description}. {request.clarification_answer}"
 
-    retrieved = search(retrieval_query, top_k=top_k, model=_embedding_model)
+    retrieved = search(retrieval_query, top_k=top_k)
     dataset_by_id = {c["item_id"]: c for c in load_dataset()}
 
     candidates = []
