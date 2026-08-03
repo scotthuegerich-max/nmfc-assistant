@@ -11,7 +11,9 @@ Setup (one-time):
   2. Share your target Google Sheet with the service account's email
      (Editor access) — same as sharing with any person.
   3. Set these environment variables:
-       GOOGLE_SHEETS_CREDENTIALS_PATH = path to the downloaded JSON key file
+       GOOGLE_SHEETS_CREDENTIALS_PATH = path to the downloaded JSON key file (local dev)
+       -- or --
+       GOOGLE_SHEETS_CREDENTIALS_JSON = the key file's contents, as a string (cloud deploy)
        GOOGLE_SHEET_ID                = the ID from the sheet's URL
        GOOGLE_SHEET_WORKSHEET         = optional, defaults to "Overrides"
 
@@ -21,6 +23,7 @@ break the classification response itself.
 """
 
 import os
+import json
 from datetime import datetime, timezone
 
 import gspread
@@ -29,6 +32,7 @@ from google.oauth2.service_account import Credentials
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
 CREDENTIALS_PATH = os.environ.get("GOOGLE_SHEETS_CREDENTIALS_PATH")
+CREDENTIALS_JSON = os.environ.get("GOOGLE_SHEETS_CREDENTIALS_JSON")  # for cloud deploys
 SHEET_ID = os.environ.get("GOOGLE_SHEET_ID")
 WORKSHEET_NAME = os.environ.get("GOOGLE_SHEET_WORKSHEET", "Overrides")
 
@@ -47,13 +51,20 @@ HEADER = [
 
 
 def _get_worksheet():
-    if not CREDENTIALS_PATH or not SHEET_ID:
+    if not SHEET_ID:
+        raise RuntimeError("GOOGLE_SHEET_ID must be set as an environment variable before logging can work.")
+    if not CREDENTIALS_PATH and not CREDENTIALS_JSON:
         raise RuntimeError(
-            "GOOGLE_SHEETS_CREDENTIALS_PATH and GOOGLE_SHEET_ID must both be set "
-            "as environment variables before logging can work."
+            "Either GOOGLE_SHEETS_CREDENTIALS_PATH (local dev, path to a JSON key file) or "
+            "GOOGLE_SHEETS_CREDENTIALS_JSON (cloud deploy, the key file's contents as a string) "
+            "must be set as an environment variable before logging can work."
         )
 
-    creds = Credentials.from_service_account_file(CREDENTIALS_PATH, scopes=SCOPES)
+    if CREDENTIALS_JSON:
+        creds = Credentials.from_service_account_info(json.loads(CREDENTIALS_JSON), scopes=SCOPES)
+    else:
+        creds = Credentials.from_service_account_file(CREDENTIALS_PATH, scopes=SCOPES)
+
     client = gspread.authorize(creds)
     sheet = client.open_by_key(SHEET_ID)
 
@@ -62,7 +73,6 @@ def _get_worksheet():
     except gspread.WorksheetNotFound:
         worksheet = sheet.add_worksheet(title=WORKSHEET_NAME, rows=1000, cols=len(HEADER))
 
-    # Add the header row if the sheet/worksheet is brand new and empty
     if not worksheet.row_values(1):
         worksheet.append_row(HEADER)
 
