@@ -4,6 +4,8 @@ An AI-assisted NMFC freight classification API for 3PL LTL shipping platforms. G
 
 **This repo is an API, not an app.** The included `demo.html` is just a wrapper that exercises the API end to end so you can see the classification logic working. The intended integration point is `POST /v1/nmfc/suggest`, meant to be embedded directly into a brokerage's existing shipment-order flow as a required-field assist, with the brokerage's own UI calling this endpoint instead of the demo shown here.
 
+**Live API**: `https://nmfc-assistant.onrender.com` — interactive docs at [`/docs`](https://nmfc-assistant.onrender.com/docs). Hosted on Render's free tier, which spins down after inactivity — the first request after idle time can take 30-60 seconds to respond while it wakes back up; subsequent requests are fast.
+
 ## The problem
 
 LTL freight class determines the rate a shipment is billed at. Most shippers know their item's dimensions and weight, but hardly anybody knows their item's NMFC code. When the code field is left blank or guessed incorrectly at booking, carriers reclassify and rebill for more money, and shippers also run the risk of shipment delays. It's a huge, expensive headache.
