@@ -242,11 +242,24 @@ def suggest_nmfc_code(request: SuggestRequest, x_api_key: Optional[str] = Header
         density_pcf, candidates = build_candidate_payload(request)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        # Anything unexpected here (e.g. a Voyage API error/rate limit during
+        # retrieval) previously surfaced as an opaque 500 with no detail.
+        # Log the full traceback server-side and return something diagnosable.
+        import traceback
+        print("--- Unexpected error during retrieval/density step ---")
+        traceback.print_exc()
+        raise HTTPException(status_code=502, detail=f"Retrieval step failed: {type(e).__name__}: {e}")
 
     try:
         claude_result = call_claude_for_ranking(request, density_pcf, candidates)
     except json.JSONDecodeError:
         raise HTTPException(status_code=502, detail="Reasoning layer returned malformed JSON")
+    except Exception as e:
+        import traceback
+        print("--- Unexpected error during Claude reasoning step ---")
+        traceback.print_exc()
+        raise HTTPException(status_code=502, detail=f"Reasoning step failed: {type(e).__name__}: {e}")
 
     return SuggestResponse(
         computed_density_pcf=density_pcf,
